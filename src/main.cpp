@@ -1,4 +1,6 @@
 #include <algorithm>
+#include <format>
+#include <iostream>
 
 #include "book_database.hpp"
 #include "comparators.hpp"
@@ -8,24 +10,11 @@
 using namespace bookdb;
 
 int main() {
-    //
-    // Ниже приведён пример работы `BookDatabase`.
-    //
-    //     - Обратите внимание, что в этой функции реализованы основные возможности, охватывающие как обязательные, так
-    //     и опциональные требования,
-    //       которые не обязательны к реализации для сдачи работы.
-    //     - Не забудьте перед созданием коммита вызвать 'run_clang_format.sh' для форматирования кода
-    //
-
     // Create a book database
     BookDatabase<std::vector<Book>> db;
 
-    /*
-
-    Код закомментирован, чтобы не приводить к ошибке компиляции
-
     // Add some books
-    db.EmplaceBack("1984", "George Orwell", 1949, Genre::SciFi, 4., 190);
+    db.EmplaceBack("1984", "George Orwell", 1949, Genre::SciFi, 4.0, 190);
     db.EmplaceBack("Animal Farm", "George Orwell", 1945, Genre::Fiction, 4.4, 143);
     db.EmplaceBack("The Great Gatsby", "F. Scott Fitzgerald", 1925, Genre::Fiction, 4.5, 120);
     db.EmplaceBack("To Kill a Mockingbird", "Harper Lee", 1960, Genre::Fiction, 4.8, 156);
@@ -35,41 +24,42 @@ int main() {
     db.EmplaceBack("Jane Eyre", "Charlotte Brontë", 1847, Genre::Fiction, 4.6, 110);
     db.EmplaceBack("The Hobbit", "J.R.R. Tolkien", 1937, Genre::Fiction, 4.9, 203);
     db.EmplaceBack("Lord of the Flies", "William Golding", 1954, Genre::Fiction, 4.2, 89);
-    std::print("Books: {}\n\n", db);
+
+    std::cout << "Books: " << db << "\n\n";
 
     // Sorts
     std::sort(db.begin(), db.end(), comp::LessByAuthor{});
-    std::print("Books sorted by author: {}\n\n==================\n", db);
+    std::cout << "Books sorted by author: " << db << "\n\n==================\n";
 
     std::sort(db.begin(), db.end(), comp::LessByPopularity{});
-    std::print("Books sorted by popularity: {}\n\n==================\n", db);
+    std::cout << "Books sorted by popularity: " << db << "\n\n==================\n";
 
     // Author histogram
     auto histogram = buildAuthorHistogramFlat(db);
-    std::print("Author histogram: {}", histogram);
+    std::cout << "Author histogram: " << std::format("{}", histogram) << std::endl;
 
     // Ratings
     auto genreRatings = calculateGenreRatings(db.begin(), db.end());
-    std::print("\n\nAverage ratings by genres: {}\n", genreRatings);
+    std::cout << "\n\nAverage ratings by genres: " << std::format("{}", genreRatings) << std::endl;
 
     auto avrRating = calculateAverageRating(db);
-    std::print("Average books rating in library: {}\n", avrRating);
+    std::cout << "Average books rating in library: " << avrRating << std::endl;
 
     // Filters
     auto filtered = filterBooks(db.begin(), db.end(), all_of(YearBetween(1900, 1999), RatingAbove(4.5)));
-    std::print("\n\nBooks from the 20th century with rating ≥ 4.5:\n");
-    std::for_each(filtered.cbegin(), filtered.cend(), [](const auto &v) { std::print("{}\n", v.get()); });
+    std::cout << "\n\nBooks from the 20th century with rating ≥ 4.5:\n";
+    std::for_each(filtered.cbegin(), filtered.cend(), [](const auto &v) { std::cout << std::format("{}\n", v.get()); });
 
     // Top 3 books
     auto topBooks = getTopNBy(db, 3, comp::LessByRating{});
-    std::print("\n\nTop 3 books by rating:\n");
-    std::for_each(topBooks.cbegin(), topBooks.cend(), [](const auto &v) { std::print("{}\n", v.get()); });
+    std::cout << "\n\nTop 3 books by rating:\n";
+    std::for_each(topBooks.cbegin(), topBooks.cend(), [](const auto &v) { std::cout << std::format("{}\n", v.get()); });
 
-    auto orwellBookIt = std::find_if(db.begin(), db.end(), [](const auto &v) { return v.author == "George Orwell"; });
+    auto orwellBookIt = std::find_if(db.begin(), db.end(), [](const auto &v) { return v.author() == "George Orwell"; });
     if (orwellBookIt != db.end()) {
-        std::print("\n\nTransparent lookup by authors. Found Orwell's book: {}\n", *orwellBookIt);
+        std::cout << "\n\nTransparent lookup by authors. Found Orwell's book: " << std::format("{}", *orwellBookIt)
+                  << std::endl;
     }
-    */
 
     return 0;
 }
