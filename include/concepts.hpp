@@ -25,4 +25,25 @@ concept StringLike = requires(T t) {
     { std::string_view(t) } -> std::convertible_to<std::string_view>;
 };
 
+template <typename T>
+concept BookLike = requires(T t) {
+    { t.title() } -> StringLike;
+    { t.author() } -> StringLike;
+    { t.year() } -> std::integral;
+    { t.genre() } -> std::convertible_to<Genre>;
+    { t.rating() } -> std::floating_point;
+};
+
+// Концепты для итераторов
+template <typename I>
+concept BookIterator = std::input_iterator<I> && BookLike<std::iter_value_t<I>>;
+
+template <typename S, typename I>
+concept BookSentinel = std::sentinel_for<S, I> && BookIterator<I>;
+
+// Концепт для flat контейнеров
+template <typename T>
+concept FlatContainer =
+    BookContainer<T> && requires(T container) { requires std::contiguous_iterator<typename T::iterator>; };
+
 }  // namespace bookdb

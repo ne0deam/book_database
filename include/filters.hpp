@@ -31,10 +31,10 @@ auto any_of(Preds... preds) {
     return [... preds = std::move(preds)](const Book &book) { return (preds(book) || ...); };
 }
 
-// Алгоритм фильтрации - версия с итераторами
-template <std::input_iterator Iterator>
-auto filterBooks(Iterator begin, Iterator end, BookPredicate auto pred) {
-    std::vector<std::reference_wrapper<const typename Iterator::value_type>> result;
+// Алгоритм фильтрации с использованием концептов
+template <BookIterator Iterator, BookSentinel<Iterator> Sentinel>
+auto filterBooks(Iterator begin, Sentinel end, BookPredicate auto pred) {
+    std::vector<std::reference_wrapper<const Book>> result;
 
     for (auto it = begin; it != end; ++it) {
         if (pred(*it)) {
@@ -45,7 +45,7 @@ auto filterBooks(Iterator begin, Iterator end, BookPredicate auto pred) {
     return result;
 }
 
-// Алгоритм фильтрации - версия с контейнером
+// Перегрузка для контейнеров
 template <BookContainer Container>
 auto filterBooks(const Container &container, BookPredicate auto pred) {
     return filterBooks(container.begin(), container.end(), pred);

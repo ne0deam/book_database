@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <format>
 #include <iostream>
+#include <random>
 
 #include "book_database.hpp"
 #include "comparators.hpp"
@@ -8,6 +9,16 @@
 #include "statsistics.hpp"
 
 using namespace bookdb;
+
+// Вспомогательная функция для вывода map с std::format
+template <typename Map>
+void printMap(const Map &map, const std::string &title) {
+    std::cout << std::format("{}:\n", title);
+    for (const auto &[key, value] : map) {
+        std::cout << std::format("  {}: {}\n", key, value);
+    }
+    std::cout << "\n";
+}
 
 int main() {
     // Create a book database
@@ -25,40 +36,42 @@ int main() {
     db.EmplaceBack("The Hobbit", "J.R.R. Tolkien", 1937, Genre::Fiction, 4.9, 203);
     db.EmplaceBack("Lord of the Flies", "William Golding", 1954, Genre::Fiction, 4.2, 89);
 
-    std::cout << "Books: " << db << "\n\n";
+    std::cout << std::format("BookDatabase with {} books:\n", db.size());
+    for (const auto &book : db.GetBooks()) {
+        std::cout << std::format("  {}\n", book);
+    }
+    std::cout << "\n";
 
-    // Sorts
-    std::sort(db.begin(), db.end(), comp::LessByAuthor{});
-    std::cout << "Books sorted by author: " << db << "\n\n==================\n";
+    // Демонстрация гетерогенного поиска
+    std::cout << "Heterogeneous lookup examples:\n";
+    std::cout << std::format("Contains author 'George Orwell': {}\n", db.containsAuthor("George Orwell"));
+    std::cout << std::format("Contains author 'Unknown': {}\n", db.containsAuthor("Unknown"));
+    std::cout << "\n";
 
-    std::sort(db.begin(), db.end(), comp::LessByPopularity{});
-    std::cout << "Books sorted by popularity: " << db << "\n\n==================\n";
-
-    // Author histogram
+    // Author histogram с flat контейнером
     auto histogram = buildAuthorHistogramFlat(db);
-    std::cout << "Author histogram: " << std::format("{}", histogram) << std::endl;
+    printMap(histogram, "Author histogram (flat)");
 
-    // Ratings
+    // Остальной код остается аналогичным...
     auto genreRatings = calculateGenreRatings(db.begin(), db.end());
-    std::cout << "\n\nAverage ratings by genres: " << std::format("{}", genreRatings) << std::endl;
+    printMap(genreRatings, "Average ratings by genres");
 
     auto avrRating = calculateAverageRating(db);
-    std::cout << "Average books rating in library: " << avrRating << std::endl;
+    std::cout << std::format("Average books rating in library: {:.2f}\n\n", avrRating);
 
     // Filters
     auto filtered = filterBooks(db.begin(), db.end(), all_of(YearBetween(1900, 1999), RatingAbove(4.5)));
-    std::cout << "\n\nBooks from the 20th century with rating ≥ 4.5:\n";
-    std::for_each(filtered.cbegin(), filtered.cend(), [](const auto &v) { std::cout << std::format("{}\n", v.get()); });
+    std::cout << "Books from the 20th century with rating ≥ 4.5:\n";
+    for (const auto &book_ref : filtered) {
+        std::cout << std::format("  {}\n", book_ref.get());
+    }
+    std::cout << "\n";
 
-    // Top 3 books
-    auto topBooks = getTopNBy(db, 3, comp::LessByRating{});
-    std::cout << "\n\nTop 3 books by rating:\n";
-    std::for_each(topBooks.cbegin(), topBooks.cend(), [](const auto &v) { std::cout << std::format("{}\n", v.get()); });
-
-    auto orwellBookIt = std::find_if(db.begin(), db.end(), [](const auto &v) { return v.author() == "George Orwell"; });
-    if (orwellBookIt != db.end()) {
-        std::cout << "\n\nTransparent lookup by authors. Found Orwell's book: " << std::format("{}", *orwellBookIt)
-                  << std::endl;
+    // Random sample
+    auto randomBooks = sampleRandomBooks(db, 3);
+    std::cout << "Random sample of 3 books:\n";
+    for (const auto &book_ref : randomBooks) {
+        std::cout << std::format("  {}\n", book_ref.get());
     }
 
     return 0;

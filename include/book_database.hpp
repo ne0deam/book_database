@@ -1,11 +1,12 @@
 #pragma once
 #include "book.hpp"
+#include "heterogeneous_lookup.hpp"
 #include <algorithm>
 #include <format>
 #include <initializer_list>
 #include <ranges>
-#include <set>
 #include <string>
+#include <unordered_set>
 #include <vector>
 
 namespace bookdb {
@@ -16,7 +17,7 @@ public:
     // Псевдонимы типов
     using value_type = typename Container::value_type;
     using container_type = Container;
-    using author_container_type = std::set<std::string, std::less<>>;
+    using author_container_type = std::unordered_set<std::string, StringViewHash, StringViewEqual>;
 
     using iterator = typename Container::iterator;
     using const_iterator = typename Container::const_iterator;
@@ -48,18 +49,22 @@ public:
     // Модификаторы
     void PushBack(const Book &book) {
         books_.push_back(book);
-        authors_.insert(std::string(book.author()));
+        // Вставляем автора и обновляем ссылку на строку из контейнера
+        auto [it, inserted] = authors_.insert(std::string(book.author()));
+        books_.back().setAuthor(*it);  // Теперь author_ ссылается на строку в authors_
     }
 
     void PushBack(Book &&book) {
         books_.push_back(std::move(book));
-        authors_.insert(std::string(books_.back().author()));
+        auto [it, inserted] = authors_.insert(std::string(books_.back().author()));
+        books_.back().setAuthor(*it);
     }
 
     template <typename... Args>
     void EmplaceBack(Args &&...args) {
         books_.emplace_back(std::forward<Args>(args)...);
-        authors_.insert(std::string(books_.back().author()));
+        auto [it, inserted] = authors_.insert(std::string(books_.back().author()));
+        books_.back().setAuthor(*it);
     }
 
     // Доступ к данным
@@ -70,7 +75,7 @@ public:
     bool empty() const noexcept { return books_.empty(); }
     size_type size() const noexcept { return books_.size(); }
 
-    // Поиск
+    // Поиск с гетерогенным lookup
     template <typename T>
     bool containsAuthor(const T &author) const {
         return authors_.find(author) != authors_.end();
@@ -80,7 +85,7 @@ public:
     friend std::ostream &operator<<(std::ostream &os, const BookDatabase &db) {
         os << "BookDatabase with " << db.size() << " books:\n";
         for (const auto &book : db.books_) {
-            os << "  " << std::format("{}", book) << "\n";
+            os << std::format("  {}\n", book);
         }
         return os;
     }

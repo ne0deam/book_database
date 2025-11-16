@@ -46,24 +46,27 @@ constexpr Genre from_string(std::string_view str) {
 
 class Book {
 public:
-    constexpr Book(std::string_view title, std::string_view author, int year, Genre genre, double rating, int pages = 0)
+    Book(std::string_view title, std::string_view author, int year, Genre genre, double rating, int pages = 0)
         : title_(title), author_(author), year_(year), genre_(genre), rating_(rating), pages_(pages) {}
 
-    constexpr Book(std::string_view title, std::string_view author, int year, std::string_view genre, double rating,
-                   int pages = 0)
+    Book(std::string_view title, std::string_view author, int year, std::string_view genre, double rating,
+         int pages = 0)
         : title_(title), author_(author), year_(year), genre_(from_string(genre)), rating_(rating), pages_(pages) {}
 
     // Основные геттеры
-    constexpr std::string_view title() const { return title_; }
-    constexpr std::string_view author() const { return author_; }
-    constexpr int year() const { return year_; }
-    constexpr Genre genre() const { return genre_; }
-    constexpr double rating() const { return rating_; }
-    constexpr int pages() const { return pages_; }
+    std::string_view title() const { return title_; }
+    std::string_view author() const { return author_; }
+    int year() const { return year_; }
+    Genre genre() const { return genre_; }
+    double rating() const { return rating_; }
+    int pages() const { return pages_; }
+
+    // Сеттер для author
+    void setAuthor(std::string_view author) { author_ = author; }
 
 private:
     std::string title_;
-    std::string author_;
+    std::string_view author_;  // Оставляем string_view как требуется
     int year_;
     Genre genre_;
     double rating_;
@@ -72,20 +75,25 @@ private:
 
 }  // namespace bookdb
 
-// Форматтер для Genre
+// Упрощенный форматтер для Book
 template <>
-struct std::formatter<bookdb::Genre> : std::formatter<std::string_view> {
-    auto format(bookdb::Genre genre, std::format_context &ctx) const {
-        return std::formatter<std::string_view>::format(bookdb::to_string(genre), ctx);
+struct std::formatter<bookdb::Book> {
+    constexpr auto parse(format_parse_context &ctx) { return ctx.begin(); }
+
+    template <typename FormatContext>
+    auto format(const bookdb::Book &book, FormatContext &ctx) const {
+        return format_to(ctx.out(), "{} by {} ({}) [{}] {:.1f} ({} pages)", book.title(), book.author(), book.year(),
+                         bookdb::to_string(book.genre()), book.rating(), book.pages());
     }
 };
 
-// Форматтер для Book
+// Упрощенный форматтер для Genre
 template <>
-struct std::formatter<bookdb::Book> : std::formatter<std::string_view> {
-    auto format(const bookdb::Book &book, std::format_context &ctx) const {
-        std::string str = std::format("{} by {} ({}) [{}] {:.1f} ({} pages)", book.title(), book.author(), book.year(),
-                                      std::format("{}", book.genre()), book.rating(), book.pages());
-        return std::formatter<std::string_view>::format(str, ctx);
+struct std::formatter<bookdb::Genre> {
+    constexpr auto parse(format_parse_context &ctx) { return ctx.begin(); }
+
+    template <typename FormatContext>
+    auto format(bookdb::Genre genre, FormatContext &ctx) const {
+        return format_to(ctx.out(), "{}", bookdb::to_string(genre));
     }
 };
